@@ -7,10 +7,11 @@ interface ToastItemProps {
 }
 
 const ToastItem: React.FC<ToastItemProps> = ({ toast, onRemove }) => {
-  const [remaining, setRemaining] = useState(toast.duration ?? 3000);
-  const [visible, setVisible] = useState(false); // для анимации
   const intervalRef = useRef<number | null>(null);
   const lastStartRef = useRef<number>(Date.now());
+  const [visible, setVisible] = useState(false); // для анимации появления/исчезновения
+
+  const duration = toast.duration ?? 3000;
 
   const clearTimer = () => {
     if (intervalRef.current) {
@@ -25,39 +26,37 @@ const ToastItem: React.FC<ToastItemProps> = ({ toast, onRemove }) => {
 
     intervalRef.current = window.setInterval(() => {
       const elapsed = Date.now() - lastStartRef.current;
-      setRemaining((prev) => {
-        const next = prev - elapsed;
-        if (next <= 0) {
-          clearTimer();
-          // запускаем анимацию скрытия перед удалением
-          setVisible(false);
-          setTimeout(() => onRemove(toast.id), 300); // 300ms = transition
-          return 0;
-        }
-        lastStartRef.current = Date.now();
-        return next;
-      });
+      lastStartRef.current = Date.now();
+
+      // уменьшаем duration
+      (toast as any)._remaining = ((toast as any)._remaining ?? duration) - elapsed;
+
+      if ((toast as any)._remaining <= 0) {
+        clearTimer();
+        // запуск анимации исчезновения
+        setVisible(false);
+        setTimeout(() => onRemove(toast.id), 300); // ждём конца анимации
+      }
     }, 50);
   };
 
   const pauseTimer = () => {
     clearTimer();
-    const elapsed = Date.now() - lastStartRef.current;
-    setRemaining((prev) => prev - elapsed);
   };
 
-  // запуск таймера при монтировании
   useEffect(() => {
-    setVisible(true); // показываем тост с анимацией
+    // показ тоста с анимацией
+    setVisible(true);
+    (toast as any)._remaining = duration;
     startTimer();
     return clearTimer;
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // сброс таймера при повторном тосте (reset)
+  // сброс таймера при повторном тосте
   useEffect(() => {
     if (toast.reset) {
-      setRemaining(toast.duration);
+      (toast as any)._remaining = duration;
       clearTimer();
       startTimer();
     }
@@ -65,19 +64,20 @@ const ToastItem: React.FC<ToastItemProps> = ({ toast, onRemove }) => {
 
   return (
     <div
-      className={`toast ${visible ? 'toast-show' : 'toast-hide'} toast-${toast.type}`}
+      className={`toast toast-${toast.type} ${visible ? 'toast-show' : 'toast-hide'}`}
       onMouseEnter={pauseTimer}
       onMouseLeave={startTimer}
     >
       <span>{toast.message}</span>
       <button onClick={() => {
         setVisible(false);
-        setTimeout(() => onRemove(toast.id), 300); // плавное скрытие при клике
+        setTimeout(() => onRemove(toast.id), 300);
       }}>x</button>
     </div>
   );
 };
 
 export default ToastItem;
+
 
 
