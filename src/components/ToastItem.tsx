@@ -7,35 +7,45 @@ interface ToastItemProps {
 }
 
 const ToastItem: React.FC<ToastItemProps> = ({ toast, onRemove }) => {
-  const [remaining, setRemaining] = useState(toast.duration ?? 3000); // оставшееся время
-  const timerRef = useRef<number | null>(null);
-  const startRef = useRef<number>(Date.now());
+  const [remaining, setRemaining] = useState(toast.duration ?? 3000);
+  const intervalRef = useRef<number | null>(null);
+  const lastStartRef = useRef<number>(Date.now());
 
-  // функция запуска таймера
-  const startTimer = () => {
-    if (timerRef.current) return; // таймер уже запущен
-
-    startRef.current = Date.now();
-    timerRef.current = window.setTimeout(() => {
-      onRemove(toast.id);
-    }, remaining);
+  const clearTimer = () => {
+    if (intervalRef.current) {
+      clearInterval(intervalRef.current);
+      intervalRef.current = null;
+    }
   };
 
-  // функция паузы таймера
+  const startTimer = () => {
+    if (intervalRef.current) return; // уже запущен
+    lastStartRef.current = Date.now();
+
+    intervalRef.current = window.setInterval(() => {
+      const elapsed = Date.now() - lastStartRef.current;
+      setRemaining((prev) => {
+        const next = prev - elapsed;
+        if (next <= 0) {
+          clearTimer();
+          onRemove(toast.id);
+          return 0;
+        }
+        lastStartRef.current = Date.now();
+        return next;
+      });
+    }, 50);
+  };
+
   const pauseTimer = () => {
-    if (!timerRef.current) return;
-    clearTimeout(timerRef.current);
-    timerRef.current = null;
-    const elapsed = Date.now() - startRef.current;
+    clearTimer();
+    const elapsed = Date.now() - lastStartRef.current;
     setRemaining((prev) => prev - elapsed);
   };
 
-  // запускаем таймер при монтировании
   useEffect(() => {
     startTimer();
-    return () => {
-      if (timerRef.current) clearTimeout(timerRef.current);
-    };
+    return clearTimer;
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
