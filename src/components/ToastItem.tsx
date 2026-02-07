@@ -8,6 +8,7 @@ interface ToastItemProps {
 
 const ToastItem: React.FC<ToastItemProps> = ({ toast, onRemove }) => {
   const [remaining, setRemaining] = useState(toast.duration ?? 3000);
+  const [visible, setVisible] = useState(false); // для анимации
   const intervalRef = useRef<number | null>(null);
   const lastStartRef = useRef<number>(Date.now());
 
@@ -28,7 +29,9 @@ const ToastItem: React.FC<ToastItemProps> = ({ toast, onRemove }) => {
         const next = prev - elapsed;
         if (next <= 0) {
           clearTimer();
-          onRemove(toast.id);
+          // запускаем анимацию скрытия перед удалением
+          setVisible(false);
+          setTimeout(() => onRemove(toast.id), 300); // 300ms = transition
           return 0;
         }
         lastStartRef.current = Date.now();
@@ -45,6 +48,7 @@ const ToastItem: React.FC<ToastItemProps> = ({ toast, onRemove }) => {
 
   // запуск таймера при монтировании
   useEffect(() => {
+    setVisible(true); // показываем тост с анимацией
     startTimer();
     return clearTimer;
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -61,15 +65,19 @@ const ToastItem: React.FC<ToastItemProps> = ({ toast, onRemove }) => {
 
   return (
     <div
-      className={`toast toast-${toast.type}`}
+      className={`toast ${visible ? 'toast-show' : 'toast-hide'} toast-${toast.type}`}
       onMouseEnter={pauseTimer}
       onMouseLeave={startTimer}
     >
       <span>{toast.message}</span>
-      <button onClick={() => onRemove(toast.id)}>x</button>
+      <button onClick={() => {
+        setVisible(false);
+        setTimeout(() => onRemove(toast.id), 300); // плавное скрытие при клике
+      }}>x</button>
     </div>
   );
 };
 
 export default ToastItem;
+
 

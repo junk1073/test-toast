@@ -81,6 +81,20 @@ button:hover {
   display: flex;
   justify-content: space-between;
   align-items: center;
+
+  opacity: 0;
+  transform: translateY(-20px);
+  transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+.toast.toast-show {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.toast.toast-hide {
+  opacity: 0;
+  transform: translateY(-20px);
 }
 
 .toast button {

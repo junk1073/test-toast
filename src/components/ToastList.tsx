@@ -5,7 +5,7 @@ const ToastList: React.FC = () => {
     const { toasts, removeToast } = useToast();
 
     return (
-        <div className="toast-container">
+        <div className="toast-list">
             {toasts.map((toast) => (
                 <ToastItem key={toast.id} toast={toast} onRemove={removeToast} />
             ))}
