@@ -3,7 +3,7 @@ import { describe, it, vi, expect } from 'vitest';
 import { ToastProvider, useToast } from '../context/ToastContext';
 import ToastList from './ToastList';
 
-// Вспомогательный компонент для тестов
+// ✅ вспомогательный тестовый компонент для проверки работы тостов
 const TestComponent = () => {
     const { addToast } = useToast();
 
@@ -23,7 +23,7 @@ const TestComponent = () => {
 
 describe('Toast System', () => {
     it('показывает тост и таймер работает корректно', () => {
-        vi.useFakeTimers();
+        vi.useFakeTimers(); // ✅ используем фиктивные таймеры
 
         render(
             <ToastProvider>
@@ -34,13 +34,11 @@ describe('Toast System', () => {
         fireEvent.click(screen.getByText('Add Toast'));
         expect(screen.getByText('Успех!')).toBeInTheDocument();
 
-        // Таймер еще не истек
         vi.advanceTimersByTime(200);
         expect(screen.getByText('Успех!')).toBeInTheDocument();
 
-        // Таймер истек
         vi.advanceTimersByTime(200);
-        expect(screen.queryByText('Успех!')).toBeNull();
+        expect(screen.queryByText('Успех!')).toBeNull(); // ✅ проверяем исчезновение
 
         vi.useRealTimers();
     });
@@ -57,11 +55,11 @@ describe('Toast System', () => {
         fireEvent.click(screen.getByText('Add Toast'));
         const toast = screen.getByText('Успех!').parentElement!;
 
-        fireEvent.mouseEnter(toast); // пауза таймера
-        vi.advanceTimersByTime(1000); // прошло больше, чем duration
-        expect(screen.getByText('Успех!')).toBeInTheDocument(); // тост еще есть
+        fireEvent.mouseEnter(toast); // ✅ пауза таймера
+        vi.advanceTimersByTime(1000);
+        expect(screen.getByText('Успех!')).toBeInTheDocument();
 
-        fireEvent.mouseLeave(toast); // продолжаем таймер
+        fireEvent.mouseLeave(toast); // ✅ таймер продолжается
         vi.advanceTimersByTime(300);
         expect(screen.queryByText('Успех!')).toBeNull();
 
@@ -79,23 +77,19 @@ describe('Toast System', () => {
 
         const addButton = screen.getByText('Add Toast');
 
-        // Добавляем первый тост
         fireEvent.click(addButton);
         vi.advanceTimersByTime(200);
 
-        // Добавляем повторный тост с тем же текстом
-        fireEvent.click(addButton);
-
-        // Таймер должен быть сброшен, тост еще виден
+        fireEvent.click(addButton); // ✅ повторный тост сбрасывает таймер
         vi.advanceTimersByTime(150);
         expect(screen.getByText('Успех!')).toBeInTheDocument();
 
-        // После полного истечения таймера тост исчезает
         vi.advanceTimersByTime(300);
         expect(screen.queryByText('Успех!')).toBeNull();
 
         vi.useRealTimers();
     });
 });
+
 
 

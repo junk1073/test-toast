@@ -19,34 +19,33 @@ export const ToastProvider: React.FC<{ children: ReactNode }> = ({ children }) =
 
   const addToast = (newToast: Omit<Toast, 'id'>) => {
     setToasts((prevToasts) => {
-      // ищем тост с тем же текстом и типом
+      // ✅ дедупликация: ищем тост с тем же текстом и типом
       const existing = prevToasts.find(
         (t) => t.message === newToast.message && t.type === newToast.type
       );
 
       if (existing) {
-        // дедупликация: сброс таймера
+        // ✅ если есть такой тост — сбрасываем таймер (reset)
         return prevToasts.map((t) =>
           t.id === existing.id
-            ? { ...t, duration: newToast.duration, reset: true } // добавили reset
+            ? { ...t, duration: newToast.duration, reset: true } // ✅ добавлен флаг reset
             : t
         );
       }
 
-
-      // если нет — создаём новый
+      // ✅ если нет — создаём новый тост
       return [
         ...prevToasts,
         {
           ...newToast,
-          id: crypto.randomUUID(), // уникальный id
+          id: crypto.randomUUID(), // ✅ уникальный id
         },
       ];
     });
   };
 
   const removeToast = (id: string) => {
-    setToasts((prevToasts) => prevToasts.filter((t) => t.id !== id));
+    setToasts((prevToasts) => prevToasts.filter((t) => t.id !== id)); // ✅ удаление тоста
   };
 
   return (
@@ -56,6 +55,7 @@ export const ToastProvider: React.FC<{ children: ReactNode }> = ({ children }) =
   );
 };
 
+// ✅ хук для использования контекста
 export const useToast = () => {
   const context = useContext(ToastContext);
 
@@ -65,3 +65,4 @@ export const useToast = () => {
 
   return context;
 };
+
