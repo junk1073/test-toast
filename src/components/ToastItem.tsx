@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import type { Toast } from '../types/types';
 
 interface ToastItemProps {
-  toast: Toast;
+  toast: Toast & { reset?: boolean };
   onRemove: (id: string) => void;
 }
 
@@ -19,7 +19,7 @@ const ToastItem: React.FC<ToastItemProps> = ({ toast, onRemove }) => {
   };
 
   const startTimer = () => {
-    if (intervalRef.current) return; // уже запущен
+    if (intervalRef.current) return;
     lastStartRef.current = Date.now();
 
     intervalRef.current = window.setInterval(() => {
@@ -43,11 +43,21 @@ const ToastItem: React.FC<ToastItemProps> = ({ toast, onRemove }) => {
     setRemaining((prev) => prev - elapsed);
   };
 
+  // запуск таймера при монтировании
   useEffect(() => {
     startTimer();
     return clearTimer;
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // сброс таймера при повторном тосте (reset)
+  useEffect(() => {
+    if (toast.reset) {
+      setRemaining(toast.duration);
+      clearTimer();
+      startTimer();
+    }
+  }, [toast]);
 
   return (
     <div
@@ -62,3 +72,4 @@ const ToastItem: React.FC<ToastItemProps> = ({ toast, onRemove }) => {
 };
 
 export default ToastItem;
+

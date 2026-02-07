@@ -25,13 +25,14 @@ export const ToastProvider: React.FC<{ children: ReactNode }> = ({ children }) =
       );
 
       if (existing) {
-        // дедупликация: сбрасываем таймер, создаем новый id
+        // дедупликация: сброс таймера
         return prevToasts.map((t) =>
           t.id === existing.id
-            ? { ...t, id: crypto.randomUUID(), duration: newToast.duration }
+            ? { ...t, duration: newToast.duration, reset: true } // добавили reset
             : t
         );
       }
+
 
       // если нет — создаём новый
       return [
